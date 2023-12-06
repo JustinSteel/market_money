@@ -62,7 +62,6 @@ describe "Markets API", type: :request do
     market = JSON.parse(response.body, symbolize_names: true)
     solo_market = market[:data]
 
-    expect(market[:data]).to be_an(Hash)
     expect(solo_market).to be_a(Hash)
 
     expect(solo_market).to have_key(:id) 
@@ -98,4 +97,28 @@ describe "Markets API", type: :request do
     expect(solo_market[:attributes][:vendor_count]).to be_a(Integer)
     expect(solo_market[:attributes][:vendor_count]).to eq(0) 
   end
+
+  it "should return a list of all the vendors for a market" do
+    id = create(:market).id
+    create_list(:vendor, 5, markets: [Market.find(id)])
+
+    get "/api/v0/markets/#{id}"
+
+    expect(response).to have_http_status(200)
+    market = JSON.parse(response.body, symbolize_names: true)
+    solo_market = market[:data]
+    vendors = solo_market[:relationships][:vendors][:data]
+    
+    expect(vendors.count).to eq(5)
+
+    expect(vendors).to be_an(Array)
+
+    expect(vendors[0]).to have_key(:id)
+    expect(vendors[0][:id]).to be_a(String)
+
+    expect(vendors[0]).to have_key(:type)
+    expect(vendors[0][:type]).to be_a(String)
+  end
+
+  
 end
