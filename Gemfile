@@ -46,8 +46,6 @@ group :development, :test do
   gem 'simplecov', require: false, group: :test
   gem 'jsonapi-serializer'
   gem "shoulda-matchers"
-  
-  
 end
 
 group :development do

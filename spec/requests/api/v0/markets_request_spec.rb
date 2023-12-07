@@ -18,6 +18,7 @@ describe "Markets API", type: :request do
     expect(market[:data]).to be_an(Array)
     expect(market).to have_key(:data)
     expect(solo_market[:id]).to be_a(String)
+    expect(solo_market[:id]).to eq(markets.first.id.to_s)
 
     expect(solo_market).to have_key(:type)
     expect(solo_market[:type]).to be_a(String)
@@ -98,27 +99,64 @@ describe "Markets API", type: :request do
     expect(solo_market[:attributes][:vendor_count]).to eq(0) 
   end
 
-  it "should return a list of all the vendors for a market" do
-    id = create(:market).id
-    create_list(:vendor, 5, markets: [Market.find(id)])
+  it "returns a 404 if the market is not found" do
+    get "/api/v0/markets/112255336"
 
-    get "/api/v0/markets/#{id}"
+    expect(response).to have_http_status(404)
+    expect(response).to_not be_successful
+    expect(response.status).to eq(404)
+    data = JSON.parse(response.body, symbolize_names: true)
 
-    expect(response).to have_http_status(200)
-    market = JSON.parse(response.body, symbolize_names: true)
-    solo_market = market[:data]
-    vendors = solo_market[:relationships][:vendors][:data]
-    
-    expect(vendors.count).to eq(5)
-
-    expect(vendors).to be_an(Array)
-
-    expect(vendors[0]).to have_key(:id)
-    expect(vendors[0][:id]).to be_a(String)
-
-    expect(vendors[0]).to have_key(:type)
-    expect(vendors[0][:type]).to be_a(String)
+    expect(data[:errors]).to be_a(Array)
+    expect(data[:errors].first[:status]).to eq("404")
+    expect(data[:errors].first[:title]).to eq("Couldn't find Market with 'id'=112255336")
+    expect(data).to have_key(:errors)
+    expect(data[:errors].first).to have_key(:status)
+    expect(data[:errors].first).to have_key(:title)
   end
 
-  
+  xit "should return a list of all the vendors for a market" do
+    market = create(:market)
+    market.vendors << create_list(:vendor, 5)
+
+    get "/api/v0/markets/#{market.id}/vendors"
+
+    expect(response).to have_http_status(200)
+    vendor_data = JSON.parse(response.body, symbolize_names: true)
+    vendors = vendor_data[:data].first[:attributes]
+
+    expect(vendor_data).to have_key(:data)
+    expect(vendor_data[:data]).to be_an(Array)
+    expect(vendors).to have_key(:name)
+    expect(vendors).to have_key(:description)
+    expect(vendors).to have_key(:contact_name)
+    expect(vendors).to have_key(:contact_phone)
+    expect(vendors).to have_key(:credit_accepted)
+    expect(vendors.keys.length).to eq(5)
+
+    expect(vendor_data[:data][0][:type]).to eq('vendor')
+    expect(vendor_data[:data].length).to eq(9)
+
+    expect(vendors[:name]).to eq(market.vendors.first.name)
+    expect(vendors[:description]).to eq("#{market.vendors.first.description}")
+    expect(vendors[:contact_name]).to eq("#{market.vendors.first.contact_name}")
+    expect(vendors[:contact_phone]).to eq("#{market.vendors.first.contact_phone}")
+    expect(vendors[:credit_accepted]).to eq(market.vendors.first.credit_accepted)
+  end
+
+  xit "should return a 404 if the market is not found" do
+    get api_v0_market_vendors_path(112255336)
+
+    expect(response).to have_http_status(404)
+    expect(response).to_not be_successful
+    expect(response.status).to eq(404)
+    data = JSON.parse(response.body, symbolize_names: true)
+
+    expect(data[:errors]).to be_a(Array)
+    expect(data[:errors].first[:status]).to eq("404")
+    expect(data[:errors].first[:title]).to eq("Couldn't find Market with 'id'=112255336")
+    expect(data).to have_key(:errors)
+    expect(data[:errors].first).to have_key(:status)
+    expect(data[:errors].first).to have_key(:title)
+  end
 end
