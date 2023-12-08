@@ -1,6 +1,7 @@
 class Api::V0::VendorsController < ApplicationController
   def index
-    render json: VendorSerializer.new(Vendor.all)
+    market = Market.find(params[:market_id])
+    render json: VendorSerializer.new(market.vendors.all)
   end
   
   def show
@@ -14,16 +15,30 @@ class Api::V0::VendorsController < ApplicationController
     render json: VendorSerializer.new(vendor), status: :created
 
     else 
-      render json: { errors: vendor.errors.full_messages }, status: :unprocessable_entity
+      render json: { errors: vendor.errors.full_messages }, status: :bad_request
     end
   end
 
   def update
+    vendor = Vendor.find(params[:id])
+    vendor_update = vendor.update(vendor_params)
+
+    if vendor_update
     render json: VendorSerializer.new(Vendor.update(params[:id], vendor_params))
+
+    else 
+      render json: { errors: vendor.errors.full_messages }, status: :bad_request
+    end
   end
 
   def destroy
-    render json: Vendor.delete(params[:id])
+    vendor = Vendor.find(params[:id])
+
+    if vendor.destroy
+
+    else 
+      render json: { errors: vendor.errors.full_messages }, status: :bad_request
+    end
   end
 
   private

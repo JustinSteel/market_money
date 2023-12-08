@@ -115,8 +115,9 @@ describe "Markets API", type: :request do
     expect(data[:errors].first).to have_key(:title)
   end
 
-  xit "should return a list of all the vendors for a market" do
+  it "should return a list of all the vendors for a market" do
     market = create(:market)
+    # require 'pry'; binding.pry
     market.vendors << create_list(:vendor, 5)
 
     get "/api/v0/markets/#{market.id}/vendors"
@@ -135,7 +136,8 @@ describe "Markets API", type: :request do
     expect(vendors.keys.length).to eq(5)
 
     expect(vendor_data[:data][0][:type]).to eq('vendor')
-    expect(vendor_data[:data].length).to eq(9)
+    expect(vendor_data[:data].length).to eq(5)
+    # require 'pry'; binding.pry
 
     expect(vendors[:name]).to eq(market.vendors.first.name)
     expect(vendors[:description]).to eq("#{market.vendors.first.description}")
@@ -144,8 +146,8 @@ describe "Markets API", type: :request do
     expect(vendors[:credit_accepted]).to eq(market.vendors.first.credit_accepted)
   end
 
-  xit "should return a 404 if the market is not found" do
-    get api_v0_market_vendors_path(112255336)
+  it "should return a 404 if the market is not found" do
+    get "/api/v0/markets/112255336445/vendors"
 
     expect(response).to have_http_status(404)
     expect(response).to_not be_successful
@@ -154,7 +156,7 @@ describe "Markets API", type: :request do
 
     expect(data[:errors]).to be_a(Array)
     expect(data[:errors].first[:status]).to eq("404")
-    expect(data[:errors].first[:title]).to eq("Couldn't find Market with 'id'=112255336")
+    expect(data[:errors].first[:title]).to eq("Couldn't find Market with 'id'=112255336445")
     expect(data).to have_key(:errors)
     expect(data[:errors].first).to have_key(:status)
     expect(data[:errors].first).to have_key(:title)
