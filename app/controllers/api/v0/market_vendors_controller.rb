@@ -32,10 +32,4 @@ class Api::V0::MarketVendorsController < ApplicationController
       market_vendor.destroy
     end
   end
-
-  private
-
-  def market_vendor_params
-    params.require(:market_vendor).permit(:market_id, :vendor_id)
-  end
 end
