@@ -161,4 +161,22 @@ describe "Markets API", type: :request do
     expect(data[:errors].first).to have_key(:status)
     expect(data[:errors].first).to have_key(:title)
   end
+
+  it "can search for a market" do
+    markets = create_list(:market, 5)
+    market1 = markets.first
+
+    get "/api/v0/markets/search", params: { name: market1.name }
+    puts response.body
+    expect(response).to have_http_status(200)
+
+    data = JSON.parse(response.body, symbolize_names: true)
+
+    expect(data[:data]).to be_a(Array)
+    expect(data[:data].length).to eq(1)
+    expect(data[:data].first[:id]).to eq(market1.id)
+    expect(data[:data].first[:attributes][:name]).to eq(market1.name)
+    expect(data[:data].first[:attributes][:city]).to eq(market1.city)
+    expect(data[:data].first[:attributes][:state]).to eq(market1.state)
+  end
 end
